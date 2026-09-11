@@ -1,0 +1,45 @@
+services:
+  surge-database:
+    image: docker.io/library/postgres:18
+    container_name: surge-database
+    user: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - database-data:/var/lib/postgresql
+
+  surge-redis:
+    image: docker.io/library/redis:alpine
+    container_name: surge-redis
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--requirepass",
+        "${REDIS_PASSWORD}"
+      ]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli", ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6380:6379"
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+
+volumes:
+  database-data:
+  redis-data:
