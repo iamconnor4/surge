@@ -14,14 +14,19 @@
         {
           devShells.default = pkgs.mkShell {
             buildInputs = with pkgs; [
-              # project tooling
+              # go tooling
               go
               gopls
               gotools
               golangci-lint 
+              
+              # build tooling
               gnumake
 
-              # 
+              # db & migrations
+              goose
+              postgresql
+              redis
             ];
           };
         }
