@@ -29,6 +29,7 @@ type Redis struct {
 	Host     string `env:"HOST,required"`
 	Port     int    `env:"PORT,required"`
 	Password string `env:"PASSWORD,required"`
+	DB       int    `env:"DB,required"`
 }
 
 func Load() (*Config, error) {

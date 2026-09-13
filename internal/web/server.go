@@ -14,6 +14,7 @@ type Config struct {
 
 type Dependencies struct {
 	Postgres ReadinessChecker
+	Redis    ReadinessChecker
 }
 
 type Server struct {

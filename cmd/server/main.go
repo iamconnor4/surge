@@ -13,6 +13,7 @@ import (
 
 	"github.com/iamconnor4/surge/internal/config"
 	"github.com/iamconnor4/surge/internal/platform/postgres"
+	"github.com/iamconnor4/surge/internal/platform/redis"
 	"github.com/iamconnor4/surge/internal/web"
 )
 
@@ -32,12 +33,12 @@ func main() {
 func run(ctx context.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return fmt.Errorf("config failed to load: %w", err)
 	}
 
 	setupLogger(cfg.LogLevel)
 
-	db, err := postgres.NewClient(ctx, postgres.Config{
+	postgresClient, err := postgres.NewClient(ctx, postgres.Config{
 		Host:     cfg.Postgres.Host,
 		Port:     cfg.Postgres.Port,
 		User:     cfg.Postgres.User,
@@ -46,16 +47,32 @@ func run(ctx context.Context) error {
 		SSLMode:  cfg.Postgres.SSLMode,
 	})
 	if err != nil {
-		return fmt.Errorf("initialise database: %w", err)
+		return fmt.Errorf("postgres client failed to initalise: %w", err)
 	}
-	defer db.Close()
+	defer postgresClient.Close()
+
+	redisClient, err := redis.NewClient(ctx, redis.Config{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		return fmt.Errorf("redis client failed to initialise: %w", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			slog.Error("failed to close redis client", "error", err)
+		}
+	}()
 
 	server := web.New(
 		web.Config{
 			Address: ":" + strconv.Itoa(cfg.Port),
 		},
 		web.Dependencies{
-			Postgres: db,
+			Postgres: postgresClient,
+			Redis:    redisClient,
 		},
 	)
 

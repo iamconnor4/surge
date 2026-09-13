@@ -23,5 +23,11 @@ func (s *Server) handleReadiness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := s.dependencies.Redis.Ping(ctx); err != nil {
+		slog.WarnContext(ctx, "redis readiness check failed", "error", err)
+		http.Error(w, "service unavailable", http.StatusServiceUnavailable)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
