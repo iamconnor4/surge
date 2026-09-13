@@ -18,6 +18,8 @@ import (
 )
 
 func main() {
+	setupLogger(slog.LevelInfo)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
 	err := run(ctx)
@@ -25,7 +27,11 @@ func main() {
 	stop()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "application error: %v\n", err)
+		slog.ErrorContext(
+			context.Background(),
+			"application error",
+			"error", err,
+		)
 		os.Exit(1)
 	}
 }
@@ -33,10 +39,15 @@ func main() {
 func run(ctx context.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
-		return fmt.Errorf("config failed to load: %w", err)
+		return fmt.Errorf("load config: %w", err)
 	}
 
-	setupLogger(cfg.LogLevel)
+	level, err := parseLogLevel(cfg.LogLevel)
+	if err != nil {
+		return fmt.Errorf("parse log level: %w", err)
+	}
+
+	setupLogger(level)
 
 	postgresClient, err := postgres.NewClient(ctx, postgres.Config{
 		Host:     cfg.Postgres.Host,
@@ -47,7 +58,7 @@ func run(ctx context.Context) error {
 		SSLMode:  cfg.Postgres.SSLMode,
 	})
 	if err != nil {
-		return fmt.Errorf("postgres client failed to initalise: %w", err)
+		return fmt.Errorf("connect postgres: %w", err)
 	}
 	defer postgresClient.Close()
 
@@ -58,7 +69,7 @@ func run(ctx context.Context) error {
 		DB:       cfg.Redis.DB,
 	})
 	if err != nil {
-		return fmt.Errorf("redis client failed to initialise: %w", err)
+		return fmt.Errorf("connect redis: %w", err)
 	}
 	defer func() {
 		if err := redisClient.Close(); err != nil {
@@ -84,24 +95,26 @@ func run(ctx context.Context) error {
 	return server.Serve(ctx)
 }
 
-func setupLogger(levelStr string) {
-	var level slog.Level
-	switch strings.ToLower(levelStr) {
+func parseLogLevel(levelStr string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(levelStr)) {
 	case "debug":
-		level = slog.LevelDebug
+		return slog.LevelDebug, nil
 	case "warn":
-		level = slog.LevelWarn
+		return slog.LevelWarn, nil
 	case "error":
-		level = slog.LevelError
+		return slog.LevelError, nil
+	case "info":
+		return slog.LevelInfo, nil
 	default:
-		level = slog.LevelInfo
+		return 0, fmt.Errorf("unsupported log level: %q", levelStr)
 	}
+}
 
+func setupLogger(level slog.Level) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     level,
 		AddSource: level == slog.LevelDebug,
 	})
 
 	slog.SetDefault(slog.New(handler))
-
 }
