@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -32,6 +33,7 @@ func New(cfg Config, dependencies Dependencies) *Server {
 	s.httpServer = &http.Server{
 		Addr:              cfg.Address,
 		Handler:           s.routes(),
+		ErrorLog:          slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,
