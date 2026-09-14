@@ -7,9 +7,12 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"log/slog"
 	"strings"
+
+	"github.com/lmittmann/tint"
 
 	"github.com/iamconnor4/surge/internal/config"
 	"github.com/iamconnor4/surge/internal/platform/postgres"
@@ -18,7 +21,9 @@ import (
 )
 
 func main() {
-	setupLogger(slog.LevelInfo)
+	// Use production environment JSON logging until
+	// environment configuration confirmed.
+	setupBootstrapLogger(slog.LevelInfo)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
@@ -47,7 +52,7 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("parse log level: %w", err)
 	}
 
-	setupLogger(level)
+	setupLogger(cfg.Env, level)
 
 	postgresClient, err := postgres.NewClient(ctx, postgres.Config{
 		Host:     cfg.Postgres.Host,
@@ -79,7 +84,9 @@ func run(ctx context.Context) error {
 
 	server := web.New(
 		web.Config{
-			Address: ":" + strconv.Itoa(cfg.Port),
+			Address:     ":" + strconv.Itoa(cfg.Port),
+			Service:     "surge",
+			Environment: cfg.Env,
 		},
 		web.Dependencies{
 			Postgres: postgresClient,
@@ -110,11 +117,29 @@ func parseLogLevel(levelStr string) (slog.Level, error) {
 	}
 }
 
-func setupLogger(level slog.Level) {
+func setupBootstrapLogger(level slog.Level) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     level,
 		AddSource: level == slog.LevelDebug,
 	})
+
+	slog.SetDefault(slog.New(handler))
+}
+
+func setupLogger(env string, level slog.Level) {
+	var handler slog.Handler
+	if env == "production" {
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     level,
+			AddSource: level == slog.LevelDebug,
+		})
+	} else {
+		handler = tint.NewTextHandler(os.Stdout, &tint.Options{
+			Level:      level,
+			AddSource:  level == slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		})
+	}
 
 	slog.SetDefault(slog.New(handler))
 }

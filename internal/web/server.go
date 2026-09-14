@@ -10,7 +10,9 @@ import (
 )
 
 type Config struct {
-	Address string
+	Address     string
+	Service     string
+	Environment string
 }
 
 type Dependencies struct {
@@ -21,19 +23,27 @@ type Dependencies struct {
 type Server struct {
 	httpServer      *http.Server
 	dependencies    Dependencies
+	logger          *slog.Logger
+	service         string
+	environment     string
 	shutdownTimeout time.Duration
 }
 
 func New(cfg Config, dependencies Dependencies) *Server {
+	logger := slog.Default()
+
 	s := &Server{
 		dependencies:    dependencies,
+		logger:          logger,
+		service:         cfg.Service,
+		environment:     cfg.Environment,
 		shutdownTimeout: 15 * time.Second,
 	}
 
 	s.httpServer = &http.Server{
 		Addr:              cfg.Address,
 		Handler:           s.routes(),
-		ErrorLog:          slog.NewLogLogger(slog.Default().Handler(), slog.LevelError),
+		ErrorLog:          slog.NewLogLogger(logger.Handler(), slog.LevelError),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      30 * time.Second,
