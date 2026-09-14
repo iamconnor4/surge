@@ -8,5 +8,5 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("GET /livez", s.handleLiveness)
 	mux.HandleFunc("GET /readyz", s.handleReadiness)
 
-	return mux
+	return s.logRequests(mux)
 }

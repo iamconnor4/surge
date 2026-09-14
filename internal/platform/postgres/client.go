@@ -72,7 +72,7 @@ func NewClient(ctx context.Context, cfg Config, opts ...Option) (*Client, error)
 
 	if err := client.Ping(ctx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("inital ping failed: %w", err)
+		return nil, fmt.Errorf("initial ping failed: %w", err)
 	}
 
 	return client, nil

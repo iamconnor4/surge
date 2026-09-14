@@ -7,16 +7,24 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"log/slog"
 	"strings"
 
+	"github.com/lmittmann/tint"
+
 	"github.com/iamconnor4/surge/internal/config"
 	"github.com/iamconnor4/surge/internal/platform/postgres"
+	"github.com/iamconnor4/surge/internal/platform/redis"
 	"github.com/iamconnor4/surge/internal/web"
 )
 
 func main() {
+	// Use production environment JSON logging until
+	// environment configuration confirmed.
+	setupBootstrapLogger(slog.LevelInfo)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
 	err := run(ctx)
@@ -24,7 +32,11 @@ func main() {
 	stop()
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "application error: %v\n", err)
+		slog.ErrorContext(
+			context.Background(),
+			"application error",
+			"error", err,
+		)
 		os.Exit(1)
 	}
 }
@@ -32,12 +44,17 @@ func main() {
 func run(ctx context.Context) error {
 	cfg, err := config.Load()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
+		return fmt.Errorf("load config: %w", err)
 	}
 
-	setupLogger(cfg.LogLevel)
+	level, err := parseLogLevel(cfg.LogLevel)
+	if err != nil {
+		return fmt.Errorf("parse log level: %w", err)
+	}
 
-	db, err := postgres.NewClient(ctx, postgres.Config{
+	setupLogger(cfg.Env, level)
+
+	postgresClient, err := postgres.NewClient(ctx, postgres.Config{
 		Host:     cfg.Postgres.Host,
 		Port:     cfg.Postgres.Port,
 		User:     cfg.Postgres.User,
@@ -46,16 +63,34 @@ func run(ctx context.Context) error {
 		SSLMode:  cfg.Postgres.SSLMode,
 	})
 	if err != nil {
-		return fmt.Errorf("initialise database: %w", err)
+		return fmt.Errorf("connect postgres: %w", err)
 	}
-	defer db.Close()
+	defer postgresClient.Close()
+
+	redisClient, err := redis.NewClient(ctx, redis.Config{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		return fmt.Errorf("connect redis: %w", err)
+	}
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			slog.Error("failed to close redis client", "error", err)
+		}
+	}()
 
 	server := web.New(
 		web.Config{
-			Address: ":" + strconv.Itoa(cfg.Port),
+			Address:     ":" + strconv.Itoa(cfg.Port),
+			Service:     "surge",
+			Environment: cfg.Env,
 		},
 		web.Dependencies{
-			Postgres: db,
+			Postgres: postgresClient,
+			Redis:    redisClient,
 		},
 	)
 
@@ -67,24 +102,44 @@ func run(ctx context.Context) error {
 	return server.Serve(ctx)
 }
 
-func setupLogger(levelStr string) {
-	var level slog.Level
-	switch strings.ToLower(levelStr) {
+func parseLogLevel(levelStr string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(levelStr)) {
 	case "debug":
-		level = slog.LevelDebug
+		return slog.LevelDebug, nil
 	case "warn":
-		level = slog.LevelWarn
+		return slog.LevelWarn, nil
 	case "error":
-		level = slog.LevelError
+		return slog.LevelError, nil
+	case "info":
+		return slog.LevelInfo, nil
 	default:
-		level = slog.LevelInfo
+		return 0, fmt.Errorf("unsupported log level: %q", levelStr)
 	}
+}
 
+func setupBootstrapLogger(level slog.Level) {
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level:     level,
 		AddSource: level == slog.LevelDebug,
 	})
 
 	slog.SetDefault(slog.New(handler))
+}
 
+func setupLogger(env string, level slog.Level) {
+	var handler slog.Handler
+	if env == "production" {
+		handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level:     level,
+			AddSource: level == slog.LevelDebug,
+		})
+	} else {
+		handler = tint.NewTextHandler(os.Stdout, &tint.Options{
+			Level:      level,
+			AddSource:  level == slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		})
+	}
+
+	slog.SetDefault(slog.New(handler))
 }
