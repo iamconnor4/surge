@@ -9,16 +9,22 @@ start: ## Start the surge server
 build: ## Build the surge server
 	@go build -o ./bin/server ./cmd/server
 
-style: ## Runs formatter, static analysis and linter
-	@goimports -w .
+check: ## Run CI checks
 	@go vet ./...
-	@golangci-lint run
+	@go tool golangci-lint run
+	@go test -race ./...
+	@go mod tidy
+	@git diff --exit-code -- go.mod go.sum
 
-tidy: ## Clean module dependencies
+tidy: ## Format source and clean module dependencies
+	@go tool goimports -w .
 	@go mod tidy
 
 clean: ## Remove build artifacts
 	@go clean
+
+test: ## Run tests
+	@go test ./...
 
 docker-up: ## Start postgres and redis
 	@docker compose up -d
