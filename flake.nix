@@ -17,8 +17,6 @@
               # go tooling
               go
               gopls
-              gotools
-              golangci-lint 
               
               # build tooling
               gnumake
