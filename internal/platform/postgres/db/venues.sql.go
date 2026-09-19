@@ -11,19 +11,17 @@ import (
 	"github.com/iamconnor4/surge/internal/domain"
 )
 
-const getUserById = `-- name: GetUserById :one
-SELECT id, email, first_name, last_name, created_at, updated_at
-FROM users WHERE id = $1
+const getVenueById = `-- name: GetVenueById :one
+SELECT id, name, created_at, updated_at
+FROM venues WHERE id = $1
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id domain.UserID) (User, error) {
-	row := q.db.QueryRow(ctx, getUserById, id)
-	var i User
+func (q *Queries) GetVenueById(ctx context.Context, id domain.VenueID) (Venue, error) {
+	row := q.db.QueryRow(ctx, getVenueById, id)
+	var i Venue
 	err := row.Scan(
 		&i.ID,
-		&i.Email,
-		&i.FirstName,
-		&i.LastName,
+		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
