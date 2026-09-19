@@ -7,23 +7,42 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/iamconnor4/surge/internal/domain"
 )
 
-const getUserById = `-- name: GetUserById :one
-SELECT id, email, first_name, last_name, created_at, updated_at
-FROM users WHERE id = $1
+const createVenue = `-- name: CreateVenue :exec
+INSERT INTO venues (
+    id,
+    name,
+    created_at
+)
+VALUES ($1, $2, $3)
 `
 
-func (q *Queries) GetUserById(ctx context.Context, id domain.UserID) (User, error) {
-	row := q.db.QueryRow(ctx, getUserById, id)
-	var i User
+type CreateVenueParams struct {
+	ID        domain.VenueID
+	Name      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateVenue(ctx context.Context, arg CreateVenueParams) error {
+	_, err := q.db.Exec(ctx, createVenue, arg.ID, arg.Name, arg.CreatedAt)
+	return err
+}
+
+const getVenueById = `-- name: GetVenueById :one
+SELECT id, name, created_at, updated_at
+FROM venues WHERE id = $1
+`
+
+func (q *Queries) GetVenueById(ctx context.Context, id domain.VenueID) (Venue, error) {
+	row := q.db.QueryRow(ctx, getVenueById, id)
+	var i Venue
 	err := row.Scan(
 		&i.ID,
-		&i.Email,
-		&i.FirstName,
-		&i.LastName,
+		&i.Name,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

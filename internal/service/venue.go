@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/iamconnor4/surge/internal/domain"
 	"github.com/iamconnor4/surge/internal/platform/postgres/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type Venue struct {
@@ -21,7 +23,7 @@ func NewVenue(queries *db.Queries) *Venue {
 func (s *Venue) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
 	dbVenue, err := s.queries.GetVenueById(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Venue{}, domain.ErrVenueNotFound
 		}
 
@@ -34,4 +36,35 @@ func (s *Venue) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue,
 		CreatedAt: dbVenue.CreatedAt,
 		UpdatedAt: dbVenue.UpdatedAt,
 	}, nil
+}
+
+func (s *Venue) CreateVenue(ctx context.Context, input domain.CreateVenueInput) (domain.Venue, error) {
+	input.Name = strings.TrimSpace(input.Name)
+
+	if input.Name == "" {
+		return domain.Venue{}, domain.ErrVenueInvalidName
+	}
+
+	id, err := domain.NewVenueID()
+	if err != nil {
+		return domain.Venue{}, fmt.Errorf("generate venue ID: %w", err)
+	}
+
+	venue := domain.Venue{
+		ID:        id,
+		Name:      input.Name,
+		CreatedAt: time.Now().UTC(),
+	}
+
+	err = s.queries.CreateVenue(ctx, db.CreateVenueParams{
+		ID:        venue.ID,
+		Name:      venue.Name,
+		CreatedAt: venue.CreatedAt,
+	})
+
+	if err != nil {
+		return domain.Venue{}, fmt.Errorf("create venue: %w", err)
+	}
+
+	return venue, nil
 }

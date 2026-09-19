@@ -7,21 +7,54 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/iamconnor4/surge/internal/domain"
 )
 
-const getVenueById = `-- name: GetVenueById :one
-SELECT id, name, created_at, updated_at
-FROM venues WHERE id = $1
+const createUser = `-- name: CreateUser :exec
+INSERT INTO users (
+    id,
+    email,
+    first_name,
+    last_name,
+    created_at
+)
+VALUES ($1, $2, $3, $4, $5)
 `
 
-func (q *Queries) GetVenueById(ctx context.Context, id domain.VenueID) (Venue, error) {
-	row := q.db.QueryRow(ctx, getVenueById, id)
-	var i Venue
+type CreateUserParams struct {
+	ID        domain.UserID
+	Email     string
+	FirstName string
+	LastName  string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.Exec(ctx, createUser,
+		arg.ID,
+		arg.Email,
+		arg.FirstName,
+		arg.LastName,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const getUserById = `-- name: GetUserById :one
+SELECT id, email, first_name, last_name, created_at, updated_at
+FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserById(ctx context.Context, id domain.UserID) (User, error) {
+	row := q.db.QueryRow(ctx, getUserById, id)
+	var i User
 	err := row.Scan(
 		&i.ID,
-		&i.Name,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

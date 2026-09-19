@@ -10,16 +10,30 @@ import (
 
 const testUUIDv7 = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e30"
 
-type userManagerFunc func(context.Context, domain.UserID) (domain.User, error)
-
-func (f userManagerFunc) UserByID(ctx context.Context, id domain.UserID) (domain.User, error) {
-	return f(ctx, id)
+type fakeUserManager struct {
+	userByID   func(context.Context, domain.UserID) (domain.User, error)
+	createUser func(context.Context, domain.CreateUserInput) (domain.User, error)
 }
 
-type venueManagerFunc func(context.Context, domain.VenueID) (domain.Venue, error)
+func (f fakeUserManager) UserByID(ctx context.Context, id domain.UserID) (domain.User, error) {
+	return f.userByID(ctx, id)
+}
 
-func (f venueManagerFunc) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
-	return f(ctx, id)
+func (f fakeUserManager) CreateUser(ctx context.Context, input domain.CreateUserInput) (domain.User, error) {
+	return f.createUser(ctx, input)
+}
+
+type fakeVenueManager struct {
+	venueByID   func(context.Context, domain.VenueID) (domain.Venue, error)
+	createVenue func(context.Context, domain.CreateVenueInput) (domain.Venue, error)
+}
+
+func (f fakeVenueManager) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
+	return f.venueByID(ctx, id)
+}
+
+func (f fakeVenueManager) CreateVenue(ctx context.Context, input domain.CreateVenueInput) (domain.Venue, error) {
+	return f.createVenue(ctx, input)
 }
 
 func testServer(dependencies Dependencies) *Server {

@@ -9,9 +9,18 @@ import (
 )
 
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUserAlreadyExists = errors.New("user already exists with this email")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrUserAlreadyExists    = errors.New("user already exists with this email")
+	ErrUserInvalidEmail     = errors.New("user email is invalid")
+	ErrUserInvalidFirstName = errors.New("user first name is invalid")
+	ErrUserInvalidLastName  = errors.New("user last name is invalid")
 )
+
+type CreateUserInput struct {
+	Email     string
+	FirstName string
+	LastName  string
+}
 
 type User struct {
 	ID        UserID

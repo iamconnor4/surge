@@ -12,6 +12,13 @@ import (
 
 type UserManager interface {
 	UserByID(ctx context.Context, id domain.UserID) (domain.User, error)
+	CreateUser(ctx context.Context, input domain.CreateUserInput) (domain.User, error)
+}
+
+type createUserRequest struct {
+	Email     string `json:"email"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 }
 
 type userResponse struct {
@@ -32,6 +39,49 @@ func newUserResponse(u domain.User) userResponse {
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}
+}
+
+func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var request createUserRequest
+
+	if err := readJSON(w, r, &request); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	user, err := s.dependencies.Users.CreateUser(
+		ctx,
+		domain.CreateUserInput{
+			Email:     request.Email,
+			FirstName: request.FirstName,
+			LastName:  request.LastName,
+		},
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrUserAlreadyExists):
+			writeError(w, http.StatusConflict, "A user with this email already exists")
+		case errors.Is(err, domain.ErrUserInvalidEmail):
+			writeError(w, http.StatusUnprocessableEntity, "Email is required")
+		case errors.Is(err, domain.ErrUserInvalidFirstName):
+			writeError(w, http.StatusUnprocessableEntity, "First name is required")
+		case errors.Is(err, domain.ErrUserInvalidLastName):
+			writeError(w, http.StatusUnprocessableEntity, "Last name is required")
+		default:
+			addRequestLogAttrs(ctx,
+				slog.String("error_code", "user_creation_failed"),
+				slog.Any("error", err),
+			)
+
+			writeError(w, http.StatusInternalServerError, "The server encountered a problem and could not process your request")
+		}
+
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, newUserResponse(user))
 }
 
 func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {

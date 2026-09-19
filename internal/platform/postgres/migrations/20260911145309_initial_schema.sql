@@ -4,11 +4,13 @@
 
 CREATE TABLE users (
     id uuid PRIMARY KEY,
-    email text NOT NULL UNIQUE,
+    email text NOT NULL,
     first_name text NOT NULL,
     last_name text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz,
+    CONSTRAINT users_email_key
+        UNIQUE (email),
     CONSTRAINT users_email_check
         CHECK (email = lower(email))
 );
