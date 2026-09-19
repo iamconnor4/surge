@@ -16,7 +16,9 @@ import (
 
 	"github.com/iamconnor4/surge/internal/config"
 	"github.com/iamconnor4/surge/internal/platform/postgres"
+	"github.com/iamconnor4/surge/internal/platform/postgres/db"
 	"github.com/iamconnor4/surge/internal/platform/redis"
+	"github.com/iamconnor4/surge/internal/service"
 	"github.com/iamconnor4/surge/internal/web"
 )
 
@@ -82,6 +84,11 @@ func run(ctx context.Context) error {
 		}
 	}()
 
+	queries := db.New(postgresClient.Pool)
+
+	userService := service.NewUser(queries)
+	venueService := service.NewVenue(queries)
+
 	server := web.New(
 		web.Config{
 			Address:     ":" + strconv.Itoa(cfg.Port),
@@ -89,8 +96,13 @@ func run(ctx context.Context) error {
 			Environment: cfg.Env,
 		},
 		web.Dependencies{
-			Postgres: postgresClient,
-			Redis:    redisClient,
+			Users:  userService,
+			Venues: venueService,
+
+			HealthChecks: map[string]web.Pinger{
+				"postgres": postgresClient,
+				"redis":    redisClient,
+			},
 		},
 	)
 
