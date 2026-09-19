@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"github.com/iamconnor4/surge/internal/domain"
@@ -25,7 +25,7 @@ func NewUser(queries *db.Queries) *User {
 func (s *User) UserByID(ctx context.Context, id domain.UserID) (domain.User, error) {
 	dbUser, err := s.queries.GetUserById(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.User{}, domain.ErrUserNotFound
 		}
 

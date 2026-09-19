@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/iamconnor4/surge/internal/domain"
 	"github.com/iamconnor4/surge/internal/platform/postgres/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type Venue struct {
@@ -21,7 +21,7 @@ func NewVenue(queries *db.Queries) *Venue {
 func (s *Venue) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
 	dbVenue, err := s.queries.GetVenueById(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return domain.Venue{}, domain.ErrVenueNotFound
 		}
 
