@@ -9,8 +9,13 @@ import (
 )
 
 var (
-	ErrVenueNotFound = errors.New("venue not found")
+	ErrVenueNotFound    = errors.New("venue not found")
+	ErrVenueInvalidName = errors.New("venue name is invalid")
 )
+
+type CreateVenueInput struct {
+	Name string
+}
 
 type Venue struct {
 	ID        VenueID

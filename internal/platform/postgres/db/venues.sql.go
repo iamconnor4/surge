@@ -7,9 +7,30 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/iamconnor4/surge/internal/domain"
 )
+
+const createVenue = `-- name: CreateVenue :exec
+INSERT INTO venues (
+    id,
+    name,
+    created_at
+)
+VALUES ($1, $2, $3)
+`
+
+type CreateVenueParams struct {
+	ID        domain.VenueID
+	Name      string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateVenue(ctx context.Context, arg CreateVenueParams) error {
+	_, err := q.db.Exec(ctx, createVenue, arg.ID, arg.Name, arg.CreatedAt)
+	return err
+}
 
 const getVenueById = `-- name: GetVenueById :one
 SELECT id, name, created_at, updated_at

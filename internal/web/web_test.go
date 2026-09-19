@@ -23,10 +23,17 @@ func (f fakeUserManager) CreateUser(ctx context.Context, input domain.CreateUser
 	return f.createUser(ctx, input)
 }
 
-type venueManagerFunc func(context.Context, domain.VenueID) (domain.Venue, error)
+type fakeVenueManager struct {
+	venueByID   func(context.Context, domain.VenueID) (domain.Venue, error)
+	createVenue func(context.Context, domain.CreateVenueInput) (domain.Venue, error)
+}
 
-func (f venueManagerFunc) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
-	return f(ctx, id)
+func (f fakeVenueManager) VenueByID(ctx context.Context, id domain.VenueID) (domain.Venue, error) {
+	return f.venueByID(ctx, id)
+}
+
+func (f fakeVenueManager) CreateVenue(ctx context.Context, input domain.CreateVenueInput) (domain.Venue, error) {
+	return f.createVenue(ctx, input)
 }
 
 func testServer(dependencies Dependencies) *Server {
