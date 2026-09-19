@@ -7,9 +7,40 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/iamconnor4/surge/internal/domain"
 )
+
+const createUser = `-- name: CreateUser :exec
+INSERT INTO users (
+    id,
+    email,
+    first_name,
+    last_name,
+    created_at
+)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type CreateUserParams struct {
+	ID        domain.UserID
+	Email     string
+	FirstName string
+	LastName  string
+	CreatedAt time.Time
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
+	_, err := q.db.Exec(ctx, createUser,
+		arg.ID,
+		arg.Email,
+		arg.FirstName,
+		arg.LastName,
+		arg.CreatedAt,
+	)
+	return err
+}
 
 const getUserById = `-- name: GetUserById :one
 SELECT id, email, first_name, last_name, created_at, updated_at
