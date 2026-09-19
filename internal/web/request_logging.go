@@ -102,11 +102,7 @@ func (s *Server) logRequests(next http.Handler) http.Handler {
 				)
 
 				if recovered != http.ErrAbortHandler && response.statusCode == 0 {
-					http.Error(
-						response,
-						"internal server error",
-						http.StatusInternalServerError,
-					)
+					writeError(response, http.StatusInternalServerError, "The server encountered a problem and could not process your request")
 				}
 			}
 

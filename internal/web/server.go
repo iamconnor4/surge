@@ -16,8 +16,9 @@ type Config struct {
 }
 
 type Dependencies struct {
-	Postgres ReadinessChecker
-	Redis    ReadinessChecker
+	HealthChecks map[string]Pinger
+	Users        UserManager
+	Venues       VenueManager
 }
 
 type Server struct {
