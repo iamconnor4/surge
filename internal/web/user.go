@@ -30,14 +30,14 @@ type userResponse struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
-func newUserResponse(u domain.User) userResponse {
+func newUserResponse(user domain.User) userResponse {
 	return userResponse{
-		ID:        u.ID.String(),
-		Email:     u.Email,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
+		ID:        user.ID.String(),
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}
 }
 
@@ -63,12 +63,16 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, domain.ErrUserAlreadyExists):
 			writeError(w, http.StatusConflict, "A user with this email already exists")
+
 		case errors.Is(err, domain.ErrUserInvalidEmail):
 			writeError(w, http.StatusUnprocessableEntity, "Email is required")
+
 		case errors.Is(err, domain.ErrUserInvalidFirstName):
 			writeError(w, http.StatusUnprocessableEntity, "First name is required")
+
 		case errors.Is(err, domain.ErrUserInvalidLastName):
 			writeError(w, http.StatusUnprocessableEntity, "Last name is required")
+
 		default:
 			addRequestLogAttrs(ctx,
 				slog.String("error_code", "user_creation_failed"),

@@ -45,12 +45,12 @@ CREATE TABLE venue_seats (
     id uuid PRIMARY KEY,
     venue_section_id uuid NOT NULL,
     row_label text NOT NULL,
-    seat_number text NOT NULL,
+    seat_label text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz,
 
-    CONSTRAINT venue_seats_venue_section_id_row_label_seat_number_key
-        UNIQUE (venue_section_id, row_label, seat_number),
+    CONSTRAINT venue_seats_venue_section_id_row_label_seat_label_key
+        UNIQUE (venue_section_id, row_label, seat_label),
 
     CONSTRAINT venue_seats_venue_section_id_fkey
         FOREIGN KEY (venue_section_id)

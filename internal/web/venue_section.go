@@ -27,13 +27,13 @@ type venueSectionResponse struct {
 	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }
 
-func newVenueSectionResponse(vS domain.VenueSection) venueSectionResponse {
+func newVenueSectionResponse(section domain.VenueSection) venueSectionResponse {
 	return venueSectionResponse{
-		ID:        vS.ID.String(),
-		VenueID:   vS.VenueID.String(),
-		Name:      vS.Name,
-		CreatedAt: vS.CreatedAt,
-		UpdatedAt: vS.UpdatedAt,
+		ID:        section.ID.String(),
+		VenueID:   section.VenueID.String(),
+		Name:      section.Name,
+		CreatedAt: section.CreatedAt,
+		UpdatedAt: section.UpdatedAt,
 	}
 }
 
@@ -64,8 +64,10 @@ func (s *Server) handleCreateVenueSection(w http.ResponseWriter, r *http.Request
 		switch {
 		case errors.Is(err, domain.ErrVenueNotFound):
 			writeError(w, http.StatusNotFound, "Venue not found")
+
 		case errors.Is(err, domain.ErrVenueSectionInvalidName):
 			writeError(w, http.StatusUnprocessableEntity, "Name is required")
+
 		default:
 			addRequestLogAttrs(ctx,
 				slog.String("error_code", "venue_section_creation_failed"),

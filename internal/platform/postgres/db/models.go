@@ -113,10 +113,10 @@ type Venue struct {
 }
 
 type VenueSeat struct {
-	ID             pgtype.UUID
-	VenueSectionID pgtype.UUID
+	ID             domain.VenueSeatID
+	VenueSectionID domain.VenueSectionID
 	RowLabel       string
-	SeatNumber     string
+	SeatLabel      string
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
 }
