@@ -8,7 +8,11 @@ import (
 	"github.com/iamconnor4/surge/internal/domain"
 )
 
-const testUUIDv7 = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e30"
+const (
+	testUserID         = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e30"
+	testVenueID        = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e30"
+	testVenueSectionID = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e31"
+)
 
 type fakeUserManager struct {
 	userByID   func(context.Context, domain.UserID) (domain.User, error)
@@ -34,6 +38,19 @@ func (f fakeVenueManager) VenueByID(ctx context.Context, id domain.VenueID) (dom
 
 func (f fakeVenueManager) CreateVenue(ctx context.Context, input domain.CreateVenueInput) (domain.Venue, error) {
 	return f.createVenue(ctx, input)
+}
+
+type fakeVenueSectionManager struct {
+	venueSectionByID   func(context.Context, domain.VenueSectionID) (domain.VenueSection, error)
+	createVenueSection func(context.Context, domain.CreateVenueSectionInput) (domain.VenueSection, error)
+}
+
+func (f fakeVenueSectionManager) VenueSectionByID(ctx context.Context, id domain.VenueSectionID) (domain.VenueSection, error) {
+	return f.venueSectionByID(ctx, id)
+}
+
+func (f fakeVenueSectionManager) CreateVenueSection(ctx context.Context, input domain.CreateVenueSectionInput) (domain.VenueSection, error) {
+	return f.createVenueSection(ctx, input)
 }
 
 func testServer(dependencies Dependencies) *Server {
