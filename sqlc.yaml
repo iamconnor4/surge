@@ -44,3 +44,11 @@ sql:
             go_type:
               type: "VenueSectionID"
               import: "github.com/iamconnor4/surge/internal/domain"
+          - column: "events.id"
+            go_type:
+              type: "EventID"
+              import: "github.com/iamconnor4/surge/internal/domain"
+          - column: "events.venue_id"
+            go_type:
+              type: "VenueID"
+              import: "github.com/iamconnor4/surge/internal/domain"

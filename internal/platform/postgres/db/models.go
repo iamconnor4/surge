@@ -58,8 +58,8 @@ func (ns NullOrderStatus) Value() (driver.Value, error) {
 }
 
 type Event struct {
-	ID          pgtype.UUID
-	VenueID     pgtype.UUID
+	ID          domain.EventID
+	VenueID     domain.VenueID
 	Title       string
 	Description string
 	StartsAt    time.Time
