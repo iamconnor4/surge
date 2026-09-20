@@ -17,5 +17,8 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("POST /venues/{venueID}/sections", s.handleCreateVenueSection)
 	mux.HandleFunc("GET /venue-sections/{venueSectionID}", s.handleVenueSectionByID)
 
+	mux.HandleFunc("POST /venue-sections/{venueSectionID}/seats", s.handleCreateVenueSeats)
+	mux.HandleFunc("GET /venue-seats/{venueSeatID}", s.handleVenueSeatByID)
+
 	return s.logRequests(mux)
 }
