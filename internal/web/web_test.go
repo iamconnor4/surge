@@ -14,6 +14,7 @@ const (
 	testVenueSectionID = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e31"
 	testVenueSeatID    = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e32"
 	testVenueSeatID2   = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e33"
+	testEventID        = "01994fa0-7c4f-7d22-8a3e-4e2fdc262e34"
 )
 
 type fakeUserManager struct {
@@ -66,6 +67,19 @@ func (f fakeVenueSeatManager) VenueSeatByID(ctx context.Context, id domain.Venue
 
 func (f fakeVenueSeatManager) CreateVenueSeats(ctx context.Context, input domain.CreateVenueSeatsInput) ([]domain.VenueSeat, error) {
 	return f.createVenueSeats(ctx, input)
+}
+
+type fakeEventManager struct {
+	eventByID   func(context.Context, domain.EventID) (domain.Event, error)
+	createEvent func(context.Context, domain.CreateEventInput) (domain.Event, error)
+}
+
+func (f fakeEventManager) EventByID(ctx context.Context, id domain.EventID) (domain.Event, error) {
+	return f.eventByID(ctx, id)
+}
+
+func (f fakeEventManager) CreateEvent(ctx context.Context, input domain.CreateEventInput) (domain.Event, error) {
+	return f.createEvent(ctx, input)
 }
 
 func testServer(dependencies Dependencies) *Server {
