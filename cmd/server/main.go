@@ -88,6 +88,7 @@ func run(ctx context.Context) error {
 
 	userService := service.NewUser(queries)
 	venueService := service.NewVenue(queries)
+	venueSectionService := service.NewVenueSection(queries)
 
 	server := web.New(
 		web.Config{
@@ -96,8 +97,9 @@ func run(ctx context.Context) error {
 			Environment: cfg.Env,
 		},
 		web.Dependencies{
-			Users:  userService,
-			Venues: venueService,
+			Users:         userService,
+			Venues:        venueService,
+			VenueSections: venueSectionService,
 
 			HealthChecks: map[string]web.Pinger{
 				"postgres": postgresClient,

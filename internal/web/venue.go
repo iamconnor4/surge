@@ -73,7 +73,7 @@ func (s *Server) handleCreateVenue(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleVenueByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	id, err := domain.ParseVenueID(r.PathValue("id"))
+	id, err := domain.ParseVenueID(r.PathValue("venueID"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid venue ID")
 		return
