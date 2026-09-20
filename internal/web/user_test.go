@@ -16,7 +16,7 @@ func TestHandleUserByID(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Date(2026, time.September, 19, 12, 0, 0, 0, time.UTC)
-	id, err := domain.ParseUserID(testUUIDv7)
+	id, err := domain.ParseUserID(testUserID)
 	if err != nil {
 		t.Fatalf("parse test user ID: %v", err)
 	}
@@ -32,7 +32,7 @@ func TestHandleUserByID(t *testing.T) {
 	}{
 		{
 			name: "success",
-			path: "/users/" + testUUIDv7,
+			path: "/users/" + testUserID,
 			result: domain.User{
 				ID: id, Email: "connor@example.com", FirstName: "Connor", LastName: "Smith", CreatedAt: createdAt,
 			},
@@ -43,11 +43,11 @@ func TestHandleUserByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest, wantBody: `"error":"Invalid user ID"`,
 		},
 		{
-			name: "not found", path: "/users/" + testUUIDv7, serviceErr: domain.ErrUserNotFound,
+			name: "not found", path: "/users/" + testUserID, serviceErr: domain.ErrUserNotFound,
 			wantStatus: http.StatusNotFound, wantBody: `"error":"User not found"`, wantServiceCall: true,
 		},
 		{
-			name: "service failure", path: "/users/" + testUUIDv7, serviceErr: errors.New("database unavailable"),
+			name: "service failure", path: "/users/" + testUserID, serviceErr: errors.New("database unavailable"),
 			wantStatus: http.StatusInternalServerError, wantBody: `"error":"The server encountered a problem`, wantServiceCall: true,
 		},
 	}
@@ -89,7 +89,7 @@ func TestHandleCreateUser(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Date(2026, time.September, 19, 12, 0, 0, 0, time.UTC)
-	id, err := domain.ParseUserID(testUUIDv7)
+	id, err := domain.ParseUserID(testUserID)
 	if err != nil {
 		t.Fatalf("parse test user ID: %v", err)
 	}
@@ -115,7 +115,7 @@ func TestHandleCreateUser(t *testing.T) {
 			name:            "success",
 			body:            `{"email":"connor@example.com","firstName":"Connor","lastName":"Smith"}`,
 			wantStatus:      http.StatusCreated,
-			wantBody:        `"id":"` + testUUIDv7 + `"`,
+			wantBody:        `"id":"` + testUserID + `"`,
 			wantServiceCall: true,
 			wantInput:       domain.CreateUserInput{Email: "connor@example.com", FirstName: "Connor", LastName: "Smith"},
 		},

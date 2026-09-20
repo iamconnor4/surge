@@ -15,7 +15,7 @@ import (
 func TestHandleVenueByID(t *testing.T) {
 	t.Parallel()
 
-	id, err := domain.ParseVenueID(testUUIDv7)
+	id, err := domain.ParseVenueID(testVenueID)
 	if err != nil {
 		t.Fatalf("parse test venue ID: %v", err)
 	}
@@ -30,7 +30,7 @@ func TestHandleVenueByID(t *testing.T) {
 		wantServiceCall bool
 	}{
 		{
-			name: "success", path: "/venues/" + testUUIDv7,
+			name: "success", path: "/venues/" + testVenueID,
 			result:     domain.Venue{ID: id, Name: "Royal Albert Hall"},
 			wantStatus: http.StatusOK, wantBody: `"name":"Royal Albert Hall"`, wantServiceCall: true,
 		},
@@ -39,11 +39,11 @@ func TestHandleVenueByID(t *testing.T) {
 			wantStatus: http.StatusBadRequest, wantBody: `"error":"Invalid venue ID"`,
 		},
 		{
-			name: "not found", path: "/venues/" + testUUIDv7, serviceErr: domain.ErrVenueNotFound,
+			name: "not found", path: "/venues/" + testVenueID, serviceErr: domain.ErrVenueNotFound,
 			wantStatus: http.StatusNotFound, wantBody: `"error":"Venue not found"`, wantServiceCall: true,
 		},
 		{
-			name: "service failure", path: "/venues/" + testUUIDv7, serviceErr: errors.New("database unavailable"),
+			name: "service failure", path: "/venues/" + testVenueID, serviceErr: errors.New("database unavailable"),
 			wantStatus: http.StatusInternalServerError, wantBody: `"error":"The server encountered a problem`, wantServiceCall: true,
 		},
 	}
@@ -85,7 +85,7 @@ func TestHandleCreateVenue(t *testing.T) {
 	t.Parallel()
 
 	createdAt := time.Date(2026, time.September, 19, 12, 0, 0, 0, time.UTC)
-	id, err := domain.ParseVenueID(testUUIDv7)
+	id, err := domain.ParseVenueID(testVenueID)
 	if err != nil {
 		t.Fatalf("parse test venue ID: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestHandleCreateVenue(t *testing.T) {
 			name:            "success",
 			body:            `{"name":"Royal Albert Hall"}`,
 			wantStatus:      http.StatusCreated,
-			wantBody:        `"id":"` + testUUIDv7 + `"`,
+			wantBody:        `"id":"` + testVenueID + `"`,
 			wantServiceCall: true,
 			wantInput:       domain.CreateVenueInput{Name: "Royal Albert Hall"},
 		},

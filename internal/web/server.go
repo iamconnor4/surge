@@ -16,9 +16,10 @@ type Config struct {
 }
 
 type Dependencies struct {
-	HealthChecks map[string]Pinger
-	Users        UserManager
-	Venues       VenueManager
+	HealthChecks  map[string]Pinger
+	Users         UserManager
+	Venues        VenueManager
+	VenueSections VenueSectionManager
 }
 
 type Server struct {

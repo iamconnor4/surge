@@ -87,7 +87,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleUserByID(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	id, err := domain.ParseUserID(r.PathValue("id"))
+	id, err := domain.ParseUserID(r.PathValue("userID"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "Invalid user ID")
 		return

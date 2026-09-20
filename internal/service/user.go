@@ -82,6 +82,7 @@ func (s *User) CreateUser(ctx context.Context, input domain.CreateUserInput) (do
 		var pgErr *pgconn.PgError
 
 		if errors.As(err, &pgErr) &&
+			pgErr.Code == "23505" &&
 			pgErr.ConstraintName == "users_email_key" {
 			return domain.User{}, domain.ErrUserAlreadyExists
 		}

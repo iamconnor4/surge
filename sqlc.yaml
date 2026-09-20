@@ -28,3 +28,11 @@ sql:
             go_type:
               type: "VenueID"
               import: "github.com/iamconnor4/surge/internal/domain"
+          - column: "venue_sections.id"
+            go_type:
+              type: "VenueSectionID"
+              import: "github.com/iamconnor4/surge/internal/domain"
+          - column: "venue_sections.venue_id"
+            go_type:
+              type: "VenueID"
+              import: "github.com/iamconnor4/surge/internal/domain"
