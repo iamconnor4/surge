@@ -21,6 +21,7 @@ type Dependencies struct {
 	Venues        VenueManager
 	VenueSections VenueSectionManager
 	VenueSeats    VenueSeatManager
+	Events        EventManager
 }
 
 type Server struct {
