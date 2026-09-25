@@ -68,9 +68,9 @@ type Event struct {
 }
 
 type EventSeat struct {
-	ID          pgtype.UUID
-	EventID     pgtype.UUID
-	VenueSeatID pgtype.UUID
+	ID          domain.EventSeatID
+	EventID     domain.EventID
+	VenueSeatID domain.VenueSeatID
 	PricePence  int64
 	IsAvailable bool
 	CreatedAt   time.Time

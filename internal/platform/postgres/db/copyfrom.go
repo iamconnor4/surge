@@ -9,6 +9,43 @@ import (
 	"context"
 )
 
+// iteratorForCreateEventSeats implements pgx.CopyFromSource.
+type iteratorForCreateEventSeats struct {
+	rows                 []CreateEventSeatsParams
+	skippedFirstNextCall bool
+}
+
+func (r *iteratorForCreateEventSeats) Next() bool {
+	if len(r.rows) == 0 {
+		return false
+	}
+	if !r.skippedFirstNextCall {
+		r.skippedFirstNextCall = true
+		return true
+	}
+	r.rows = r.rows[1:]
+	return len(r.rows) > 0
+}
+
+func (r iteratorForCreateEventSeats) Values() ([]interface{}, error) {
+	return []interface{}{
+		r.rows[0].ID,
+		r.rows[0].EventID,
+		r.rows[0].VenueSeatID,
+		r.rows[0].PricePence,
+		r.rows[0].IsAvailable,
+		r.rows[0].CreatedAt,
+	}, nil
+}
+
+func (r iteratorForCreateEventSeats) Err() error {
+	return nil
+}
+
+func (q *Queries) CreateEventSeats(ctx context.Context, arg []CreateEventSeatsParams) (int64, error) {
+	return q.db.CopyFrom(ctx, []string{"event_seats"}, []string{"id", "event_id", "venue_seat_id", "price_pence", "is_available", "created_at"}, &iteratorForCreateEventSeats{rows: arg})
+}
+
 // iteratorForCreateVenueSeats implements pgx.CopyFromSource.
 type iteratorForCreateVenueSeats struct {
 	rows                 []CreateVenueSeatsParams

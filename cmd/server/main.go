@@ -91,6 +91,7 @@ func run(ctx context.Context) error {
 	venueSectionService := service.NewVenueSection(queries)
 	venueSeatService := service.NewVenueSeat(queries)
 	eventService := service.NewEvent(queries)
+	eventSeatService := service.NewEventSeat(queries)
 
 	server := web.New(
 		web.Config{
@@ -104,6 +105,7 @@ func run(ctx context.Context) error {
 			VenueSections: venueSectionService,
 			VenueSeats:    venueSeatService,
 			Events:        eventService,
+			EventSeats:    eventSeatService,
 
 			HealthChecks: map[string]web.Pinger{
 				"postgres": postgresClient,
