@@ -56,3 +56,33 @@ func (q *Queries) GetVenueSectionById(ctx context.Context, id domain.VenueSectio
 	)
 	return i, err
 }
+
+const getVenueSectionsByIds = `-- name: GetVenueSectionsByIds :many
+SELECT id, venue_id
+FROM venue_sections WHERE id = ANY($1)
+`
+
+type GetVenueSectionsByIdsRow struct {
+	ID      domain.VenueSectionID
+	VenueID domain.VenueID
+}
+
+func (q *Queries) GetVenueSectionsByIds(ctx context.Context, venueSectionIds []domain.VenueSectionID) ([]GetVenueSectionsByIdsRow, error) {
+	rows, err := q.db.Query(ctx, getVenueSectionsByIds, venueSectionIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetVenueSectionsByIdsRow
+	for rows.Next() {
+		var i GetVenueSectionsByIdsRow
+		if err := rows.Scan(&i.ID, &i.VenueID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
